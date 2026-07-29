@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/mongodb";
 import Registration, { getNextSequence } from "@/models/Registration";
+import Settings from "@/models/Settings";
 import {
   getCategoryByClass,
   getAvailableEvents,
-  MAX_OFF_STAGE_SELECTIONS,
 } from "@/data/categories";
 
 export async function POST(req) {
@@ -15,11 +15,16 @@ export async function POST(req) {
       guardianPhone,
       gender,
       studentClass,
-      stageEvent,
+      stageEvents,
       offEvents,
     } = body || {};
 
     // --- Validation (kept in one place so bad data never reaches the DB) ---
+    await dbConnect();
+    let settings = await Settings.findOne({});
+    const maxOffStageSelections = settings?.maxOffStageSelections ?? 2;
+    const maxStageSelections = settings?.maxStageSelections ?? 1;
+
     const errors = {};
 
     if (!studentName || studentName.trim().length < 2) {
@@ -45,27 +50,29 @@ export async function POST(req) {
     const stageKeys = available.stage.map((e) => e.key);
     const offKeys = available.off.map((e) => e.key);
 
-    if (stageEvent && !stageKeys.includes(stageEvent)) {
-      errors.stageEvent = "തിരഞ്ഞെടുത്ത സ്റ്റേജ് ഇനം ലഭ്യമല്ല";
+    const chosenStage = Array.isArray(stageEvents) ? stageEvents : [];
+    if (chosenStage.length > maxStageSelections) {
+      errors.stageEvents = `പരമാവധി ${maxStageSelections} ഇനങ്ങൾ മാത്രം തിരഞ്ഞെടുക്കാം`;
+    }
+    if (chosenStage.some((k) => !stageKeys.includes(k))) {
+      errors.stageEvents = "തിരഞ്ഞെടുത്ത സ്റ്റേജ് ഇനം ലഭ്യമല്ല";
     }
 
     const chosenOff = Array.isArray(offEvents) ? offEvents : [];
-    if (chosenOff.length > MAX_OFF_STAGE_SELECTIONS) {
-      errors.offEvents = `പരമാവധി ${MAX_OFF_STAGE_SELECTIONS} ഇനങ്ങൾ മാത്രം തിരഞ്ഞെടുക്കാം`;
+    if (chosenOff.length > maxOffStageSelections) {
+      errors.offEvents = `പരമാവധി ${maxOffStageSelections} ഇനങ്ങൾ മാത്രം തിരഞ്ഞെടുക്കാം`;
     }
     if (chosenOff.some((k) => !offKeys.includes(k))) {
       errors.offEvents = "തിരഞ്ഞെടുത്ത ഇനങ്ങളിൽ ചിലത് ലഭ്യമല്ല";
     }
 
-    if (!stageEvent && chosenOff.length === 0) {
+    if (chosenStage.length === 0 && chosenOff.length === 0) {
       errors.general = "ചുരുങ്ങിയത് ഒരു ഇനമെങ്കിലും തിരഞ്ഞെടുക്കുക";
     }
 
     if (Object.keys(errors).length > 0) {
       return NextResponse.json({ ok: false, errors }, { status: 400 });
     }
-
-    await dbConnect();
 
     // Prevent an accidental double-submit of the exact same student
     const duplicate = await Registration.findOne({
@@ -90,7 +97,7 @@ export async function POST(req) {
     const seq = await getNextSequence(`registration_${year}`);
     const regNo = `MF-${year}-${String(seq).padStart(4, "0")}`;
 
-    const stageEventObj = available.stage.find((e) => e.key === stageEvent);
+    const stageEventObjs = available.stage.filter((e) => chosenStage.includes(e.key));
     const offEventObjs = available.off.filter((e) => chosenOff.includes(e.key));
 
     const doc = await Registration.create({
@@ -101,8 +108,8 @@ export async function POST(req) {
       studentClass,
       categoryId: category.id,
       categoryLabel: `${category.label} (${category.classRangeLabel})`,
-      stageEvent: stageEventObj ? stageEventObj.key : null,
-      stageEventName: stageEventObj ? stageEventObj.name : null,
+      stageEvents: stageEventObjs.map((e) => e.key),
+      stageEventNames: stageEventObjs.map((e) => e.name),
       offEvents: offEventObjs.map((e) => e.key),
       offEventNames: offEventObjs.map((e) => e.name),
     });
@@ -111,7 +118,7 @@ export async function POST(req) {
       ok: true,
       regNo: doc.regNo,
       categoryLabel: doc.categoryLabel,
-      stageEventName: doc.stageEventName,
+      stageEventNames: doc.stageEventNames,
       offEventNames: doc.offEventNames,
     });
   } catch (err) {

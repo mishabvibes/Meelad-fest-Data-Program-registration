@@ -28,12 +28,12 @@ const RegistrationSchema = new mongoose.Schema(
     categoryId: { type: String, required: true, index: true },
 
     // event keys chosen, referencing data/categories.js
-    stageEvent: { type: String, default: null }, // single choice, optional
+    stageEvents: { type: [String], default: [] }, // up to maxStageSelections
     offEvents: { type: [String], default: [] }, // up to MAX_OFF_STAGE_SELECTIONS
 
     // human-readable snapshots so old registrations still display correctly
     // even if the event catalog is edited later
-    stageEventName: { type: String, default: null },
+    stageEventNames: { type: [String], default: [] },
     offEventNames: { type: [String], default: [] },
     categoryLabel: { type: String, required: true },
 

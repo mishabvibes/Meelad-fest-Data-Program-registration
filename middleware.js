@@ -7,6 +7,7 @@ export async function middleware(req) {
   const isProtectedPage = pathname.startsWith("/admin/dashboard");
   const isProtectedApi =
     pathname.startsWith("/api/admin/registrations") ||
+    pathname.startsWith("/api/admin/settings") ||
     pathname.startsWith("/api/admin/export");
 
   if (!isProtectedPage && !isProtectedApi) {
@@ -29,5 +30,10 @@ export async function middleware(req) {
 }
 
 export const config = {
-  matcher: ["/admin/dashboard/:path*", "/api/admin/registrations/:path*", "/api/admin/export/:path*"],
+  matcher: [
+    "/admin/dashboard/:path*",
+    "/api/admin/registrations/:path*",
+    "/api/admin/settings/:path*",
+    "/api/admin/export/:path*"
+  ],
 };

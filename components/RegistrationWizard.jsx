@@ -7,7 +7,6 @@ import {
   CATEGORIES,
   getCategoryByClass,
   getAvailableEvents,
-  MAX_OFF_STAGE_SELECTIONS,
 } from "@/data/categories";
 import ChoiceButton from "./ChoiceButton";
 import StepDots from "./StepDots";
@@ -18,11 +17,11 @@ const initialForm = {
   guardianPhone: "",
   gender: "",
   studentClass: "",
-  stageEvent: "",
+  stageEvents: [],
   offEvents: [],
 };
 
-export default function RegistrationWizard() {
+export default function RegistrationWizard({ maxOffStageSelections = 2, maxStageSelections = 1 }) {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [form, setForm] = useState(initialForm);
@@ -59,7 +58,7 @@ export default function RegistrationWizard() {
 
   function validateStep2() {
     const e = {};
-    if (!form.stageEvent && form.offEvents.length === 0) {
+    if (form.stageEvents.length === 0 && form.offEvents.length === 0) {
       e.general = "ചുരുങ്ങിയത് ഒരു ഇനമെങ്കിലും തിരഞ്ഞെടുക്കുക";
     }
     setErrors(e);
@@ -69,7 +68,7 @@ export default function RegistrationWizard() {
   function goNext() {
     if (step === 1 && validateStep1()) {
       // Reset event choices if the category/gender combination changed the available list
-      setForm((f) => ({ ...f, stageEvent: "", offEvents: [] }));
+      setForm((f) => ({ ...f, stageEvents: [], offEvents: [] }));
       setStep(2);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } else if (step === 2 && validateStep2()) {
@@ -84,13 +83,26 @@ export default function RegistrationWizard() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  function toggleStageEvent(key) {
+    setForm((f) => {
+      const has = f.stageEvents.includes(key);
+      if (has) {
+        return { ...f, stageEvents: f.stageEvents.filter((k) => k !== key) };
+      }
+      if (f.stageEvents.length >= maxStageSelections) {
+        return f;
+      }
+      return { ...f, stageEvents: [...f.stageEvents, key] };
+    });
+  }
+
   function toggleOffEvent(key) {
     setForm((f) => {
       const has = f.offEvents.includes(key);
       if (has) {
         return { ...f, offEvents: f.offEvents.filter((k) => k !== key) };
       }
-      if (f.offEvents.length >= MAX_OFF_STAGE_SELECTIONS) {
+      if (f.offEvents.length >= maxOffStageSelections) {
         return f;
       }
       return { ...f, offEvents: [...f.offEvents, key] };
@@ -111,7 +123,7 @@ export default function RegistrationWizard() {
         setErrors(data.errors || { general: "എന്തോ പിഴവ് സംഭവിച്ചു" });
         if (data.errors?.studentName || data.errors?.guardianPhone || data.errors?.gender || data.errors?.studentClass) {
           setStep(1);
-        } else if (data.errors?.stageEvent || data.errors?.offEvents) {
+        } else if (data.errors?.stageEvents || data.errors?.offEvents) {
           setStep(2);
         }
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -121,7 +133,7 @@ export default function RegistrationWizard() {
         regNo: data.regNo,
         name: form.studentName.trim(),
         category: data.categoryLabel,
-        stage: data.stageEventName || "",
+        stage: (data.stageEventNames || []).join(", "),
         off: (data.offEventNames || []).join(", "),
       });
       router.push(`/success?${params.toString()}`);
@@ -296,22 +308,31 @@ export default function RegistrationWizard() {
           <div>
             <div className="mb-2 flex items-baseline justify-between">
               <label className="text-[14px] font-semibold text-ink">
-                സ്റ്റേജ് ഇനം <span className="font-normal text-ink/40">(ഒന്ന് മാത്രം)</span>
+                സ്റ്റേജ് ഇനം{" "}
+                <span className="font-normal text-ink/40">
+                  (പരമാവധി {maxStageSelections})
+                </span>
               </label>
+              <span className="text-[12px] font-semibold text-gold">
+                {form.stageEvents.length}/{maxStageSelections}
+              </span>
             </div>
             <div className="flex flex-col gap-2.5">
-              {available.stage.map((ev) => (
-                <ChoiceButton
-                  key={ev.key}
-                  selected={form.stageEvent === ev.key}
-                  tag={ev.girlsOnly ? "പെൺ" : null}
-                  onClick={() =>
-                    update({ stageEvent: form.stageEvent === ev.key ? "" : ev.key })
-                  }
-                >
-                  {ev.name}
-                </ChoiceButton>
-              ))}
+              {available.stage.map((ev) => {
+                const selected = form.stageEvents.includes(ev.key);
+                const disabled = !selected && form.stageEvents.length >= maxStageSelections;
+                return (
+                  <ChoiceButton
+                    key={ev.key}
+                    selected={selected}
+                    disabled={disabled}
+                    tag={ev.girlsOnly ? "പെൺ" : null}
+                    onClick={() => toggleStageEvent(ev.key)}
+                  >
+                    {ev.name}
+                  </ChoiceButton>
+                );
+              })}
               {available.stage.length === 0 && (
                 <p className="text-[13px] text-ink/40">ലഭ്യമായ സ്റ്റേജ് ഇനങ്ങൾ ഇല്ല</p>
               )}
@@ -323,18 +344,18 @@ export default function RegistrationWizard() {
               <label className="text-[14px] font-semibold text-ink">
                 ഓഫ് സ്റ്റേജ് ഇനങ്ങൾ{" "}
                 <span className="font-normal text-ink/40">
-                  (പരമാവധി {MAX_OFF_STAGE_SELECTIONS})
+                  (പരമാവധി {maxOffStageSelections})
                 </span>
               </label>
               <span className="text-[12px] font-semibold text-gold">
-                {form.offEvents.length}/{MAX_OFF_STAGE_SELECTIONS}
+                {form.offEvents.length}/{maxOffStageSelections}
               </span>
             </div>
             <div className="flex flex-col gap-2.5">
               {available.off.map((ev) => {
                 const selected = form.offEvents.includes(ev.key);
                 const disabled =
-                  !selected && form.offEvents.length >= MAX_OFF_STAGE_SELECTIONS;
+                  !selected && form.offEvents.length >= maxOffStageSelections;
                 return (
                   <ChoiceButton
                     key={ev.key}
@@ -388,7 +409,10 @@ export default function RegistrationWizard() {
               <ReviewRow
                 label="സ്റ്റേജ് ഇനം"
                 value={
-                  available.stage.find((e) => e.key === form.stageEvent)?.name || "തിരഞ്ഞെടുത്തിട്ടില്ല"
+                  available.stage
+                    .filter((e) => form.stageEvents.includes(e.key))
+                    .map((e) => e.name)
+                    .join(", ") || "തിരഞ്ഞെടുത്തിട്ടില്ല"
                 }
               />
               <ReviewRow

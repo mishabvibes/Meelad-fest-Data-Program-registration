@@ -11,6 +11,9 @@ export default function AdminDashboard() {
   const [q, setQ] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [error, setError] = useState("");
+  const [settings, setSettings] = useState({ maxOffStageSelections: 2, maxStageSelections: 1 });
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -26,6 +29,12 @@ export default function AdminDashboard() {
       }
       const json = await res.json();
       setData(json);
+
+      const resSettings = await fetch("/api/admin/settings");
+      if (resSettings.ok) {
+        const jsonSettings = await resSettings.json();
+        setSettings(jsonSettings);
+      }
     } catch (err) {
       setError("ഡാറ്റ ലോഡ് ചെയ്യുന്നതിൽ പിഴവ്");
     } finally {
@@ -48,6 +57,28 @@ export default function AdminDashboard() {
     await fetch("/api/admin/logout", { method: "POST" });
     router.push("/admin");
     router.refresh();
+  }
+
+  async function saveSettings(e) {
+    e.preventDefault();
+    setSavingSettings(true);
+    try {
+      const res = await fetch("/api/admin/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(settings)
+      });
+      if (res.ok) {
+        alert("Settings saved!");
+        setShowSettings(false);
+      } else {
+        alert("Failed to save settings");
+      }
+    } catch (err) {
+      alert("Error saving settings");
+    } finally {
+      setSavingSettings(false);
+    }
   }
 
   const totalsByCategory = useMemo(() => {
@@ -74,6 +105,12 @@ export default function AdminDashboard() {
             ⬇ CSV എക്സ്പോർട്ട്
           </a>
           <button
+            onClick={() => setShowSettings(true)}
+            className="focus-ring rounded-xl border-2 border-sandline bg-white px-4 py-2.5 text-[14px] font-bold text-ink"
+          >
+            ⚙️ സെറ്റിങ്സ്
+          </button>
+          <button
             onClick={handleLogout}
             className="focus-ring rounded-xl border-2 border-sandline bg-white px-4 py-2.5 text-[14px] font-bold text-ink"
           >
@@ -81,6 +118,58 @@ export default function AdminDashboard() {
           </button>
         </div>
       </div>
+
+      {showSettings && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-night/80 p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-soft">
+            <h2 className="mb-4 font-mal text-lg font-bold text-night">സെറ്റിങ്സ് (Settings)</h2>
+            <form onSubmit={saveSettings} className="flex flex-col gap-4">
+              <div>
+                <label className="mb-1 block text-[13px] font-semibold text-ink">
+                  ഓഫ് സ്റ്റേജ് പരമാവധി ഇനങ്ങൾ (Max Off-Stage Selections)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="10"
+                  value={settings.maxOffStageSelections}
+                  onChange={(e) => setSettings({ ...settings, maxOffStageSelections: e.target.value })}
+                  className="focus-ring w-full rounded-xl border-2 border-sandline bg-sand px-3 py-2 text-[14px] outline-none"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-[13px] font-semibold text-ink">
+                  സ്റ്റേജ് പരമാവധി ഇനങ്ങൾ (Max Stage Selections)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="10"
+                  value={settings.maxStageSelections}
+                  onChange={(e) => setSettings({ ...settings, maxStageSelections: e.target.value })}
+                  className="focus-ring w-full rounded-xl border-2 border-sandline bg-sand px-3 py-2 text-[14px] outline-none"
+                />
+              </div>
+              <div className="mt-2 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowSettings(false)}
+                  className="rounded-xl px-4 py-2 text-[14px] font-bold text-ink/70"
+                >
+                  റദ്ദാക്കുക
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingSettings}
+                  className="rounded-xl bg-night px-5 py-2 text-[14px] font-bold text-sand"
+                >
+                  {savingSettings ? "സേവ് ചെയ്യുന്നു..." : "സേവ് ചെയ്യുക"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Summary cards */}
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-6">
@@ -189,7 +278,7 @@ export default function AdminDashboard() {
                   <td className="px-4 py-3">{r.studentClass}</td>
                   <td className="px-4 py-3">{r.categoryLabel}</td>
                   <td className="px-4 py-3">{r.guardianPhone}</td>
-                  <td className="px-4 py-3">{r.stageEventName || "-"}</td>
+                  <td className="px-4 py-3">{(r.stageEventNames || []).join(", ") || "-"}</td>
                   <td className="px-4 py-3">{(r.offEventNames || []).join(", ") || "-"}</td>
                 </tr>
               ))}

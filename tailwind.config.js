@@ -17,9 +17,11 @@ module.exports = {
         rose: '#B5493B',
       },
       fontFamily: {
-        display: ['var(--font-baloo)', 'sans-serif'],
-        mal: ['var(--font-manjari)', 'sans-serif'],
-        body: ['var(--font-manjari)', 'sans-serif'],
+        display: ['var(--font-noto-serif-malayalam)', 'serif'],
+        mal: ['var(--font-anek-malayalam)', 'sans-serif'],
+        body: ['var(--font-anek-malayalam)', 'sans-serif'],
+        anek: ['var(--font-anek-malayalam)', 'sans-serif'],
+        'noto-serif-ml': ['var(--font-noto-serif-malayalam)', 'serif'],
       },
       borderRadius: {
         arch: '999px 999px 12px 12px',

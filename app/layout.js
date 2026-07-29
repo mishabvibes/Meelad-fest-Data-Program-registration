@@ -1,17 +1,17 @@
-import { Baloo_Chettan_2, Manjari } from "next/font/google";
+import { Anek_Malayalam, Noto_Serif_Malayalam } from "next/font/google";
 import "./globals.css";
 
-const balooChettan2 = Baloo_Chettan_2({
+const anekMalayalam = Anek_Malayalam({
   subsets: ["malayalam", "latin"],
-  weight: ["500", "600", "700", "800"],
-  variable: "--font-baloo",
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800"],
+  variable: "--font-anek-malayalam",
   display: "swap",
 });
 
-const manjari = Manjari({
+const notoSerifMalayalam = Noto_Serif_Malayalam({
   subsets: ["malayalam", "latin"],
-  weight: ["400", "700"],
-  variable: "--font-manjari",
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+  variable: "--font-noto-serif-malayalam",
   display: "swap",
 });
 
@@ -30,7 +30,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="ml">
       <body
-        className={`${balooChettan2.variable} ${manjari.variable} font-mal bg-sand text-ink antialiased`}
+        className={`${anekMalayalam.variable} ${notoSerifMalayalam.variable} font-anek bg-sand text-ink antialiased`}
       >
         {children}
       </body>

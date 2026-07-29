@@ -16,6 +16,9 @@ export default function AdminDashboard() {
   const [savingSettings, setSavingSettings] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
   const [editingRegistration, setEditingRegistration] = useState(null);
 
@@ -52,6 +55,7 @@ export default function AdminDashboard() {
   }, []);
 
   useEffect(() => {
+    setCurrentPage(1);
     const t = setTimeout(load, 350);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -117,6 +121,14 @@ export default function AdminDashboard() {
     }
     return out;
   }, [data]);
+
+  const paginatedData = useMemo(() => {
+    if (!data?.registrations) return [];
+    const start = (currentPage - 1) * itemsPerPage;
+    return data.registrations.slice(start, start + itemsPerPage);
+  }, [data?.registrations, currentPage, itemsPerPage]);
+
+  const totalPages = data?.registrations ? Math.ceil(data.registrations.length / itemsPerPage) : 0;
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-5xl px-4 py-6 sm:px-6">
@@ -349,7 +361,7 @@ export default function AdminDashboard() {
               </tr>
             )}
             {!loading &&
-              data?.registrations?.map((r) => (
+              paginatedData.map((r) => (
                 <tr key={r._id} className="border-b border-sandline last:border-0 hover:bg-sand/40">
                   <td className="px-4 py-3 font-semibold text-night">{r.regNo}</td>
                   <td className="px-4 py-3">{r.studentName}</td>
@@ -381,6 +393,49 @@ export default function AdminDashboard() {
           </tbody>
         </table>
       </div>
+
+      {/* Pagination Controls */}
+      {!loading && data?.registrations?.length > 0 && (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-sandline bg-white p-4 shadow-soft">
+          <div className="flex items-center gap-2">
+            <span className="text-[13px] font-medium text-ink/70">Rows per page:</span>
+            <select
+              value={itemsPerPage}
+              onChange={(e) => {
+                setItemsPerPage(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+              className="focus-ring rounded-lg border border-sandline bg-sand px-2 py-1 text-[13px] outline-none"
+            >
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="text-[13px] font-medium text-ink/70">
+              Page {currentPage} of {totalPages}
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="focus-ring rounded-lg border border-sandline bg-white px-3 py-1 text-[13px] font-semibold text-ink hover:bg-sand disabled:opacity-40"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="focus-ring rounded-lg border border-sandline bg-white px-3 py-1 text-[13px] font-semibold text-ink hover:bg-sand disabled:opacity-40"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

@@ -36,10 +36,22 @@ export default function AdminLoginPage() {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-4 py-10">
-      <div className="arch-frame arch-top-glow star-dots mb-6 overflow-hidden bg-night px-5 pb-6 pt-8 text-center shadow-soft">
-        <ArchMotif className="mx-auto mb-2 h-14 w-24" />
-        <h1 className="font-mal text-lg font-bold text-sand">അഡ്മിൻ ലോഗിൻ</h1>
-        <p className="mt-1 font-mal text-[13px] text-sand/70">മീലാദ് ഫെസ്റ്റ് രജിസ്ട്രേഷൻ</p>
+      <div className="arch-header relative mb-6 w-full overflow-hidden rounded-[32px] px-6 pb-8 pt-8 text-center shadow-soft">
+        <div className="star-field pointer-events-none absolute inset-0" aria-hidden="true">
+          <span className="twinkle" style={{ left: "18%", top: "22%", animationDelay: ".2s" }} />
+          <span className="twinkle" style={{ left: "78%", top: "18%", animationDelay: "1.1s" }} />
+          <span className="twinkle" style={{ left: "30%", top: "60%", animationDelay: "1.8s" }} />
+          <span className="twinkle" style={{ left: "70%", top: "58%", animationDelay: ".7s" }} />
+          <span className="twinkle" style={{ left: "50%", top: "14%", animationDelay: "2.4s" }} />
+        </div>
+
+        <div className="relative mx-auto mb-3 h-[80px] w-[105px]">
+          <div className="motif-glow absolute -inset-8" aria-hidden="true" />
+          <img src="/images/logo.png" alt="Logo" className="relative h-full w-full object-contain drop-shadow-lg" />
+        </div>
+
+        <h1 className="font-display relative text-xl font-bold text-sand [text-shadow:0_2px_10px_rgba(0,0,0,0.25)]">അഡ്മിൻ ലോഗിൻ</h1>
+        <p className="font-mal relative mt-1 text-[13px] text-sand/70">മീലാദ് ഫെസ്റ്റ് രജിസ്ട്രേഷൻ</p>
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">

@@ -7,7 +7,7 @@ html {
 }
 
 body {
-  background-color: #fbf6ec;
+  background-color: #F6EFDD;
 }
 
 /* Mihrab-style arch used as the signature shape across the site */
@@ -53,4 +53,41 @@ body {
 }
 .rise-in {
   animation: rise-in 0.5s ease-out both;
+}
+
+.arch-header {
+  background:
+    radial-gradient(120% 100% at 50% -10%, rgba(240,214,135,0.18), transparent 55%),
+    linear-gradient(180deg, #0E3A2E 0%, #0A2A21 100%);
+}
+
+.star-field {
+  background-image: radial-gradient(rgba(240,214,135,0.35) 1px, transparent 1.4px);
+  background-size: 26px 26px;
+  background-position: 6px 10px;
+  opacity: 0.55;
+  mask-image: radial-gradient(120% 90% at 50% 20%, black 30%, transparent 85%);
+}
+
+.twinkle {
+  position: absolute;
+  width: 2.5px;
+  height: 2.5px;
+  border-radius: 50%;
+  background: #F0D687;
+  animation: twinkle 3.6s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: .25; transform: scale(0.8); }
+  50%      { opacity: 1;   transform: scale(1.15); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .twinkle { animation: none; opacity: .6; }
+}
+
+.motif-glow {
+  background: radial-gradient(circle, rgba(240,214,135,0.30) 0%, rgba(240,214,135,0) 70%);
+  filter: blur(2px);
 }

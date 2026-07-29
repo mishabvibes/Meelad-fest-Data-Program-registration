@@ -7,19 +7,19 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        night: '#0B3B2E',      // deep emerald - primary
-        nightdeep: '#072920',  // darker emerald for gradients
-        gold: '#C9A227',       // brass/gold accent
-        goldlight: '#E7C873',
-        sand: '#FBF6EC',       // warm background
+        night: '#0E3A2E',
+        'night-deep': '#0A2A21',
+        gold: '#C9A227',
+        goldlight: '#F0D687',
+        sand: '#F6EFDD',
         sandline: '#EAE0C8',
         ink: '#1B2420',
-        rose: '#B5493B',       // small accent for alerts (girls-only tags etc.)
+        rose: '#B5493B',
       },
       fontFamily: {
-        display: ['var(--font-amiri)', 'serif'],
-        mal: ['var(--font-malayalam)', 'sans-serif'],
-        body: ['var(--font-inter)', 'sans-serif'],
+        display: ['var(--font-baloo)', 'sans-serif'],
+        mal: ['var(--font-manjari)', 'sans-serif'],
+        body: ['var(--font-manjari)', 'sans-serif'],
       },
       borderRadius: {
         arch: '999px 999px 12px 12px',

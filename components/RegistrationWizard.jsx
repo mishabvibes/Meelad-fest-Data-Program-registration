@@ -134,22 +134,43 @@ export default function RegistrationWizard() {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 pb-10 pt-6">
+    <div className="mx-auto flex min-h-screen w-full max-w-md flex-col pb-10">
       {/* Header */}
-      <header className="arch-frame arch-top-glow star-dots relative mb-6 overflow-hidden bg-night px-5 pb-6 pt-8 text-center shadow-soft">
-        <ArchMotif className="mx-auto mb-2 h-16 w-28" />
-        <p className="font-mal text-[13px] font-medium text-goldlight/90">
-          ഹയാത്തുൽ ഇസ്‌ലാം ഹയർ സെക്കണ്ടറി മദ്‌റസ
-        </p>
-        <h1 className="font-display mt-1 text-2xl font-bold text-sand">
-          മീലാദ് ഫെസ്റ്റ്
-        </h1>
-        <p className="mt-1 font-mal text-[13px] text-sand/70">
-          പ്രോഗ്രാം രജിസ്ട്രേഷൻ
-        </p>
-      </header>
+      {/*
+  Drop-in replacement for the <header> block in RegistrationWizard.jsx.
+  Requires the new ArchMotif.jsx (lattice + lantern version) and the
+  Tailwind + font additions listed in NOTES.md.
+*/}
+<header className="arch-header relative overflow-hidden rounded-b-[32px] px-6 pb-8 pt-12 text-center shadow-soft">
+  {/* soft radial glow + star field, purely decorative */}
+  <div className="star-field pointer-events-none absolute inset-0" aria-hidden="true">
+    <span className="twinkle" style={{ left: "18%", top: "22%", animationDelay: ".2s" }} />
+    <span className="twinkle" style={{ left: "78%", top: "18%", animationDelay: "1.1s" }} />
+    <span className="twinkle" style={{ left: "30%", top: "60%", animationDelay: "1.8s" }} />
+    <span className="twinkle" style={{ left: "70%", top: "58%", animationDelay: ".7s" }} />
+    <span className="twinkle" style={{ left: "50%", top: "14%", animationDelay: "2.4s" }} />
+  </div>
 
-      <div className="mb-6">
+  <div className="relative mx-auto mb-3 h-[100px] w-[132px]">
+    <div className="motif-glow absolute -inset-8" aria-hidden="true" />
+    <ArchMotif className="relative h-full w-full" />
+  </div>
+
+  <p className="font-mal relative text-[12.5px] font-bold tracking-wide text-goldlight/90">
+    ഹയാത്തുൽ ഇസ്‌ലാം ഹയർ സെക്കണ്ടറി മദ്‌റസ
+  </p>
+  <h1 className="font-display relative mt-1 text-[30px] font-bold leading-tight text-sand [text-shadow:0_2px_18px_rgba(0,0,0,0.25)]">
+    മീലാദ് ഫെസ്റ്റ്
+  </h1>
+  <p className="font-mal relative mt-1 text-[13.5px] font-semibold text-sand/70">
+    പ്രോഗ്രാം രജിസ്ട്രേഷൻ
+  </p>
+
+  <div className="relative mx-auto mt-3.5 h-[2px] w-[46px] rounded-full bg-gradient-to-r from-transparent via-gold to-transparent" />
+</header>
+
+      <main className="flex flex-col px-4 pt-6">
+        <div className="mb-6">
         <StepDots step={step} />
       </div>
 
@@ -402,6 +423,7 @@ export default function RegistrationWizard() {
           </div>
         </section>
       )}
+      </main>
     </div>
   );
 }

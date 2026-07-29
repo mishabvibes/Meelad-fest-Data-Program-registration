@@ -16,8 +16,30 @@ const notoSerifMalayalam = Noto_Serif_Malayalam({
 });
 
 export const metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://your-production-domain.com"),
   title: "മീലാദ് ഫെസ്റ്റ് രജിസ്ട്രേഷൻ",
   description: "ഹയാത്തുൽ ഇസ്‌ലാം ഹയർ സെക്കണ്ടറി മദ്‌റസ - മീലാദ് ഫെസ്റ്റ് പ്രോഗ്രാം രജിസ്ട്രേഷൻ",
+  openGraph: {
+    title: "മീലാദ് ഫെസ്റ്റ് രജിസ്ട്രേഷൻ | Hayathul Islam HSS",
+    description: "ഹയാത്തുൽ ഇസ്‌ലാം ഹയർ സെക്കണ്ടറി മദ്‌റസ മീലാദ് ഫെസ്റ്റ് പ്രോഗ്രാം ഓൺലൈൻ രജിസ്ട്രേഷൻ ഫോം",
+    siteName: "Meelad Fest",
+    images: [
+      {
+        url: "/images/logo.png",
+        width: 800,
+        height: 800,
+        alt: "Meelad Fest Logo",
+      },
+    ],
+    locale: "ml_IN",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "മീലാദ് ഫെസ്റ്റ് രജിസ്ട്രേഷൻ",
+    description: "ഹയാത്തുൽ ഇസ്‌ലാം ഹയർ സെക്കണ്ടറി മദ്‌റസ മീലാദ് ഫെസ്റ്റ് പ്രോഗ്രാം ഓൺലൈൻ രജിസ്ട്രേഷൻ",
+    images: ["/images/logo.png"],
+  },
 };
 
 export const viewport = {

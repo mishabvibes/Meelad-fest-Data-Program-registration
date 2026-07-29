@@ -10,6 +10,7 @@ export async function GET(req) {
     await dbConnect();
     const { searchParams } = new URL(req.url);
     const categoryId = searchParams.get("categoryId");
+    const studentClass = searchParams.get("studentClass");
     const q = searchParams.get("q");
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "10", 10);
@@ -17,6 +18,7 @@ export async function GET(req) {
 
     const filter = {};
     if (categoryId) filter.categoryId = categoryId;
+    if (studentClass) filter.studentClass = studentClass;
     if (q) {
       filter.$or = [
         { studentName: { $regex: q, $options: "i" } },

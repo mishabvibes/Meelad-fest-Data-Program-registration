@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CATEGORIES } from "@/data/categories";
+import { CATEGORIES, ALL_CLASSES } from "@/data/categories";
 import RegistrationWizard from "@/components/RegistrationWizard";
 
 export default function AdminDashboard() {
@@ -21,6 +21,11 @@ export default function AdminDashboard() {
 
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
   const [editingRegistration, setEditingRegistration] = useState(null);
+
+  const [showPrintModal, setShowPrintModal] = useState(false);
+  const [printType, setPrintType] = useState("all");
+  const [printCategoryId, setPrintCategoryId] = useState("");
+  const [printClass, setPrintClass] = useState("");
 
   async function load() {
     setLoading(true);
@@ -150,12 +155,7 @@ export default function AdminDashboard() {
             ⬇ CSV എക്സ്പോർട്ട്
           </a>
           <button
-            onClick={() => {
-              const params = new URLSearchParams();
-              if (q) params.set("q", q);
-              if (categoryId) params.set("categoryId", categoryId);
-              window.open(`/admin/print?${params.toString()}`, "_blank");
-            }}
+            onClick={() => setShowPrintModal(true)}
             className="focus-ring rounded-xl bg-white px-4 py-2.5 text-[14px] font-bold text-night border-2 border-sandline shadow-soft"
           >
             🖨️ പ്രിന്റ് / PDF
@@ -174,6 +174,90 @@ export default function AdminDashboard() {
           </button>
         </div>
       </div>
+
+      {showPrintModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-night/80 p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-soft">
+            <h2 className="mb-4 font-mal text-lg font-bold text-night">പ്രിന്റ് ഓപ്ഷനുകൾ (Print Options)</h2>
+            <div className="flex flex-col gap-4">
+              <div>
+                <label className="mb-1 block text-[13px] font-semibold text-ink">
+                  എന്ത് പ്രിന്റ് ചെയ്യണം?
+                </label>
+                <select
+                  value={printType}
+                  onChange={(e) => setPrintType(e.target.value)}
+                  className="focus-ring w-full rounded-xl border-2 border-sandline bg-sand px-3 py-2 text-[14px] outline-none"
+                >
+                  <option value="all">എല്ലാ ഡാറ്റയും (All Data)</option>
+                  <option value="category">വിഭാഗം തിരിച്ച് (By Category)</option>
+                  <option value="class">ക്ലാസ് തിരിച്ച് (By Class)</option>
+                </select>
+              </div>
+
+              {printType === "category" && (
+                <div className="rise-in">
+                  <label className="mb-1 block text-[13px] font-semibold text-ink">
+                    വിഭാഗം തിരഞ്ഞെടുക്കുക
+                  </label>
+                  <select
+                    value={printCategoryId}
+                    onChange={(e) => setPrintCategoryId(e.target.value)}
+                    className="focus-ring w-full rounded-xl border-2 border-sandline bg-sand px-3 py-2 text-[14px] outline-none"
+                  >
+                    <option value="">-- തിരഞ്ഞെടുക്കുക --</option>
+                    {CATEGORIES.map((cat) => (
+                      <option key={cat.id} value={cat.id}>{cat.label} ({cat.classRangeLabel})</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {printType === "class" && (
+                <div className="rise-in">
+                  <label className="mb-1 block text-[13px] font-semibold text-ink">
+                    ക്ലാസ് തിരഞ്ഞെടുക്കുക
+                  </label>
+                  <select
+                    value={printClass}
+                    onChange={(e) => setPrintClass(e.target.value)}
+                    className="focus-ring w-full rounded-xl border-2 border-sandline bg-sand px-3 py-2 text-[14px] outline-none"
+                  >
+                    <option value="">-- തിരഞ്ഞെടുക്കുക --</option>
+                    {ALL_CLASSES.map((c) => (
+                      <option key={c.value} value={c.value}>{c.value}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowPrintModal(false)}
+                className="rounded-xl px-4 py-2 text-[14px] font-bold text-ink/70 hover:bg-sand"
+              >
+                റദ്ദാക്കുക
+              </button>
+              <button
+                type="button"
+                disabled={(printType === "category" && !printCategoryId) || (printType === "class" && !printClass)}
+                onClick={() => {
+                  const params = new URLSearchParams();
+                  if (printType === "category") params.set("categoryId", printCategoryId);
+                  if (printType === "class") params.set("studentClass", printClass);
+                  window.open(`/admin/print?${params.toString()}`, "_blank");
+                  setShowPrintModal(false);
+                }}
+                className="rounded-xl bg-night px-5 py-2 text-[14px] font-bold text-sand shadow-soft disabled:opacity-50"
+              >
+                ജനറേറ്റ് PDF
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showSettings && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-night/80 p-4">

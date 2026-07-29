@@ -8,6 +8,7 @@ function PrintContent() {
   const searchParams = useSearchParams();
   const q = searchParams.get("q") || "";
   const categoryId = searchParams.get("categoryId") || "";
+  const studentClass = searchParams.get("studentClass") || "";
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -18,6 +19,8 @@ function PrintContent() {
         const params = new URLSearchParams();
         if (q) params.set("q", q);
         if (categoryId) params.set("categoryId", categoryId);
+        if (studentClass) params.set("studentClass", studentClass);
+        params.set("limit", "10000"); // fetch all for print
         const res = await fetch(`/api/admin/registrations?${params.toString()}`);
         if (!res.ok) throw new Error("Failed to load");
         const json = await res.json();
@@ -29,7 +32,7 @@ function PrintContent() {
       }
     }
     load();
-  }, [q, categoryId]);
+  }, [q, categoryId, studentClass]);
 
   useEffect(() => {
     if (!loading && data) {
@@ -44,15 +47,25 @@ function PrintContent() {
   if (loading) return <div className="p-10 text-center font-bold">Loading data for printing...</div>;
   if (error) return <div className="p-10 text-center text-rose font-bold">{error}</div>;
 
-  const categoryLabel = categoryId 
-    ? CATEGORIES.find(c => c.id === categoryId)?.label 
-    : "എല്ലാ വിഭാഗവും (All Categories)";
+  let headerSub = "എല്ലാ വിഭാഗവും (All Data)";
+  if (categoryId) {
+    headerSub = `വിഭാഗം: ${CATEGORIES.find(c => c.id === categoryId)?.label}`;
+  } else if (studentClass) {
+    headerSub = `ക്ലാസ്: ${studentClass}`;
+  }
 
   return (
     <div className="bg-white p-8 text-black min-h-screen">
       <div className="no-print mb-6 rounded bg-yellow-100 p-4 text-sm text-yellow-800">
         <p><strong>Tip:</strong> In the print dialog, select <b>"Save as PDF"</b> as your destination. Turn on "Background graphics" if colors are missing.</p>
-        <button onClick={() => window.print()} className="mt-2 rounded bg-night px-4 py-2 font-bold text-white">Print Again</button>
+        <div className="mt-3 flex gap-3">
+          <button onClick={() => window.print()} className="rounded bg-night px-4 py-2 font-bold text-white">
+            🖨️ Print Again
+          </button>
+          <a href="/admin/dashboard" className="rounded bg-white border border-night px-4 py-2 font-bold text-night">
+            ← Back to Dashboard
+          </a>
+        </div>
       </div>
 
       <div className="mb-6 flex items-center gap-4">
@@ -60,7 +73,7 @@ function PrintContent() {
         <div>
           <h1 className="font-display text-2xl font-bold">മീലാദ് ഫെസ്റ്റ് രജിസ്ട്രേഷനുകൾ</h1>
           <p className="font-mal text-sm">
-            വിഭാഗം: {categoryLabel} | ആകെ: {data?.registrations?.length || 0}
+            {headerSub} | ആകെ: {data?.registrations?.length || 0}
           </p>
           {q && <p className="font-mal text-sm">Search: "{q}"</p>}
         </div>

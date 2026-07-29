@@ -10,7 +10,6 @@ import {
 } from "@/data/categories";
 import ChoiceButton from "./ChoiceButton";
 import StepDots from "./StepDots";
-import ArchMotif from "./ArchMotif";
 
 const initialForm = {
   studentName: "",
@@ -183,7 +182,7 @@ export default function RegistrationWizard({
 
   <div className="relative mx-auto mb-3 h-[100px] w-[132px]">
     <div className="motif-glow absolute -inset-8" aria-hidden="true" />
-    <ArchMotif className="relative h-full w-full" />
+    <img src="/images/logo.png" alt="Logo" className="relative h-full w-full object-contain drop-shadow-lg" />
   </div>
 
   <p className="font-mal relative text-[12.5px] font-bold tracking-wide text-goldlight/90">

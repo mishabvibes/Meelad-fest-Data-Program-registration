@@ -1,5 +1,4 @@
 import Link from "next/link";
-import ArchMotif from "@/components/ArchMotif";
 
 export default function SuccessPage({ searchParams }) {
   const regNo = searchParams?.regNo || "";
@@ -27,7 +26,7 @@ export default function SuccessPage({ searchParams }) {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col items-center px-4 pb-10 pt-10 text-center">
       <div className="arch-frame arch-top-glow star-dots w-full overflow-hidden bg-night px-6 pb-8 pt-8 shadow-soft">
-        <ArchMotif className="mx-auto mb-3 h-16 w-28" />
+        <img src="/images/logo.png" alt="Logo" className="mx-auto mb-3 h-16 w-28 object-contain drop-shadow-lg" />
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gold">
           <svg viewBox="0 0 24 24" fill="none" className="h-7 w-7">
             <path

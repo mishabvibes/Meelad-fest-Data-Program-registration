@@ -21,10 +21,17 @@ const initialForm = {
   offEvents: [],
 };
 
-export default function RegistrationWizard({ maxOffStageSelections = 2, maxStageSelections = 1 }) {
+export default function RegistrationWizard({
+  maxOffStageSelections = 2,
+  maxStageSelections = 1,
+  adminMode = false,
+  initialData = null,
+  onSuccess = null,
+  onCancel = null,
+}) {
   const router = useRouter();
   const [step, setStep] = useState(1);
-  const [form, setForm] = useState(initialForm);
+  const [form, setForm] = useState(initialData || initialForm);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
 
@@ -113,8 +120,13 @@ export default function RegistrationWizard({ maxOffStageSelections = 2, maxStage
     setSubmitting(true);
     setErrors({});
     try {
-      const res = await fetch("/api/register", {
-        method: "POST",
+      const endpoint = (adminMode && initialData?._id)
+        ? `/api/admin/registrations/${initialData._id}`
+        : "/api/register";
+      const method = (adminMode && initialData?._id) ? "PUT" : "POST";
+
+      const res = await fetch(endpoint, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
@@ -129,6 +141,11 @@ export default function RegistrationWizard({ maxOffStageSelections = 2, maxStage
         window.scrollTo({ top: 0, behavior: "smooth" });
         return;
       }
+      if (adminMode && onSuccess) {
+        onSuccess(data);
+        return;
+      }
+
       const params = new URLSearchParams({
         regNo: data.regNo,
         name: form.studentName.trim(),
@@ -153,6 +170,7 @@ export default function RegistrationWizard({ maxOffStageSelections = 2, maxStage
   Requires the new ArchMotif.jsx (lattice + lantern version) and the
   Tailwind + font additions listed in NOTES.md.
 */}
+{!adminMode && (
 <header className="arch-header relative overflow-hidden rounded-b-[32px] px-6 pb-8 pt-12 text-center shadow-soft">
   {/* soft radial glow + star field, purely decorative */}
   <div className="star-field pointer-events-none absolute inset-0" aria-hidden="true">
@@ -180,6 +198,7 @@ export default function RegistrationWizard({ maxOffStageSelections = 2, maxStage
 
   <div className="relative mx-auto mt-3.5 h-[2px] w-[46px] rounded-full bg-gradient-to-r from-transparent via-gold to-transparent" />
 </header>
+)}
 
       <main className="flex flex-col px-4 pt-6">
         <div className="mb-6">
@@ -284,13 +303,24 @@ export default function RegistrationWizard({ maxOffStageSelections = 2, maxStage
             )}
           </div>
 
-          <button
-            type="button"
-            onClick={goNext}
-            className="focus-ring mt-2 rounded-2xl bg-night py-4 text-[16px] font-bold text-sand shadow-soft active:scale-[0.99]"
-          >
-            തുടരുക →
-          </button>
+          <div className="flex gap-3">
+            {adminMode && (
+              <button
+                type="button"
+                onClick={onCancel}
+                className="focus-ring mt-2 flex-[1] rounded-2xl border-2 border-sandline bg-white py-4 text-[15px] font-bold text-ink active:scale-[0.99]"
+              >
+                റദ്ദാക്കുക
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={goNext}
+              className="focus-ring mt-2 flex-[2] rounded-2xl bg-night py-4 text-[16px] font-bold text-sand shadow-soft active:scale-[0.99]"
+            >
+              തുടരുക →
+            </button>
+          </div>
         </section>
       )}
 

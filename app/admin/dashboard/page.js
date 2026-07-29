@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CATEGORIES } from "@/data/categories";
+import RegistrationWizard from "@/components/RegistrationWizard";
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -14,6 +15,9 @@ export default function AdminDashboard() {
   const [settings, setSettings] = useState({ maxOffStageSelections: 2, maxStageSelections: 1 });
   const [savingSettings, setSavingSettings] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+
+  const [showRegistrationModal, setShowRegistrationModal] = useState(false);
+  const [editingRegistration, setEditingRegistration] = useState(null);
 
   async function load() {
     setLoading(true);
@@ -81,6 +85,30 @@ export default function AdminDashboard() {
     }
   }
 
+  function handleAdd() {
+    setEditingRegistration(null);
+    setShowRegistrationModal(true);
+  }
+
+  function handleEdit(r) {
+    setEditingRegistration(r);
+    setShowRegistrationModal(true);
+  }
+
+  async function handleDelete(id) {
+    if (!confirm("തീർച്ചയായും ഇത് ഡിലീറ്റ് ചെയ്യണമെന്നുണ്ടോ? (Are you sure you want to delete this?)")) return;
+    try {
+      const res = await fetch(`/api/admin/registrations/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        load();
+      } else {
+        alert("Failed to delete");
+      }
+    } catch (err) {
+      alert("Error deleting");
+    }
+  }
+
   const totalsByCategory = useMemo(() => {
     if (!data?.registrations) return {};
     const out = {};
@@ -98,6 +126,12 @@ export default function AdminDashboard() {
           <p className="font-mal text-[13px] text-ink/50">മീലാദ് ഫെസ്റ്റ് രജിസ്ട്രേഷനുകൾ</p>
         </div>
         <div className="flex gap-2">
+          <button
+            onClick={handleAdd}
+            className="focus-ring rounded-xl bg-night px-4 py-2.5 text-[14px] font-bold text-sand shadow-soft"
+          >
+            + പുതിയ രജിസ്ട്രേഷൻ
+          </button>
           <a
             href="/api/admin/export"
             className="focus-ring rounded-xl bg-gold px-4 py-2.5 text-[14px] font-bold text-night shadow-soft"
@@ -167,6 +201,37 @@ export default function AdminDashboard() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {showRegistrationModal && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-night/80 p-4 pt-10">
+          <div className="relative w-full max-w-md rounded-[32px] bg-sand">
+            <div className="absolute right-4 top-4 z-10">
+              <button
+                onClick={() => setShowRegistrationModal(false)}
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-ink/10 font-bold text-ink hover:bg-ink/20"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="px-6 pb-2 pt-6">
+              <h2 className="font-mal text-lg font-bold text-night">
+                {editingRegistration ? "രജിസ്ട്രേഷൻ എഡിറ്റ് ചെയ്യുക" : "പുതിയ രജിസ്ട്രേഷൻ"}
+              </h2>
+            </div>
+            <RegistrationWizard
+              adminMode={true}
+              initialData={editingRegistration}
+              maxOffStageSelections={settings.maxOffStageSelections}
+              maxStageSelections={settings.maxStageSelections}
+              onSuccess={() => {
+                setShowRegistrationModal(false);
+                load();
+              }}
+              onCancel={() => setShowRegistrationModal(false)}
+            />
           </div>
         </div>
       )}
@@ -253,19 +318,20 @@ export default function AdminDashboard() {
               <th className="px-4 py-3 font-semibold">ഫോൺ</th>
               <th className="px-4 py-3 font-semibold">സ്റ്റേജ്</th>
               <th className="px-4 py-3 font-semibold">ഓഫ് സ്റ്റേജ്</th>
+              <th className="px-4 py-3 font-semibold">Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading && (
               <tr>
-                <td colSpan={7} className="px-4 py-6 text-center text-ink/40">
+                <td colSpan={8} className="px-4 py-6 text-center text-ink/40">
                   ലോഡ് ചെയ്യുന്നു…
                 </td>
               </tr>
             )}
             {!loading && data?.registrations?.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-6 text-center text-ink/40">
+                <td colSpan={8} className="px-4 py-6 text-center text-ink/40">
                   രജിസ്ട്രേഷനുകൾ ഒന്നും കണ്ടെത്തിയില്ല
                 </td>
               </tr>
@@ -280,6 +346,24 @@ export default function AdminDashboard() {
                   <td className="px-4 py-3">{r.guardianPhone}</td>
                   <td className="px-4 py-3">{(r.stageEventNames || []).join(", ") || "-"}</td>
                   <td className="px-4 py-3">{(r.offEventNames || []).join(", ") || "-"}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleEdit(r)}
+                        className="rounded-lg bg-gold/20 px-2 py-1 text-[16px]"
+                        title="Edit"
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        onClick={() => handleDelete(r._id)}
+                        className="rounded-lg bg-rose/10 px-2 py-1 text-[16px]"
+                        title="Delete"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
           </tbody>

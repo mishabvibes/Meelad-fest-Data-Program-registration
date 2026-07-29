@@ -10,6 +10,7 @@ import {
 } from "@/data/categories";
 import ChoiceButton from "./ChoiceButton";
 import StepDots from "./StepDots";
+import CountdownTimer from "./CountdownTimer";
 
 const initialForm = {
   studentName: "",
@@ -23,6 +24,7 @@ const initialForm = {
 export default function RegistrationWizard({
   maxOffStageSelections = 2,
   maxStageSelections = 1,
+  registrationDeadline = null,
   adminMode = false,
   initialData = null,
   onSuccess = null,
@@ -33,6 +35,10 @@ export default function RegistrationWizard({
   const [form, setForm] = useState(initialData || initialForm);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  const [isExpired, setIsExpired] = useState(() => {
+    if (!registrationDeadline || adminMode) return false;
+    return new Date() > new Date(registrationDeadline);
+  });
 
   const category = useMemo(
     () => (form.studentClass ? getCategoryByClass(form.studentClass) : null),
@@ -200,9 +206,21 @@ export default function RegistrationWizard({
 )}
 
       <main className="flex flex-col px-4 pt-6">
-        <div className="mb-6">
-        <StepDots step={step} />
-      </div>
+        {isExpired && !adminMode ? (
+          <div className="rounded-2xl border border-rose/30 bg-rose/10 px-4 py-8 text-center text-rose shadow-soft">
+            <h2 className="mb-2 font-display text-2xl font-bold">രജിസ്ട്രേഷൻ അവസാനിച്ചു</h2>
+            <p className="font-mal text-[14px] font-medium opacity-80">
+              (Registration Closed)
+            </p>
+          </div>
+        ) : (
+          <>
+            {step === 1 && !adminMode && registrationDeadline && (
+              <CountdownTimer deadline={registrationDeadline} onExpire={() => setIsExpired(true)} />
+            )}
+            <div className="mb-6">
+              <StepDots step={step} />
+            </div>
 
       {errors.general && (
         <div className="mb-4 rounded-xl border border-rose/30 bg-rose/10 px-4 py-3 text-[14px] font-medium text-rose">
@@ -476,6 +494,8 @@ export default function RegistrationWizard({
           </div>
         </section>
       )}
+          </>
+        )}
       </main>
     </div>
   );

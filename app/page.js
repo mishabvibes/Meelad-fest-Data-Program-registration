@@ -10,10 +10,15 @@ export default async function HomePage() {
   let settings = await Settings.findOne({});
   const maxOffStageSelections = settings?.maxOffStageSelections ?? 2;
   const maxStageSelections = settings?.maxStageSelections ?? 1;
+  const registrationDeadline = settings?.registrationDeadline ? settings.registrationDeadline.toISOString() : null;
 
   return (
     <main>
-      <RegistrationWizard maxOffStageSelections={maxOffStageSelections} maxStageSelections={maxStageSelections} />
+      <RegistrationWizard 
+        maxOffStageSelections={maxOffStageSelections} 
+        maxStageSelections={maxStageSelections} 
+        registrationDeadline={registrationDeadline}
+      />
     </main>
   );
 }

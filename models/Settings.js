@@ -10,6 +10,10 @@ const SettingsSchema = new mongoose.Schema(
       type: Number,
       default: 1,
     },
+    registrationDeadline: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );

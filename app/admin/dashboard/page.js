@@ -12,7 +12,7 @@ export default function AdminDashboard() {
   const [q, setQ] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [error, setError] = useState("");
-  const [settings, setSettings] = useState({ maxOffStageSelections: 2, maxStageSelections: 1 });
+  const [settings, setSettings] = useState({ maxOffStageSelections: 2, maxStageSelections: 1, registrationDeadline: null });
   const [savingSettings, setSavingSettings] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
@@ -183,6 +183,18 @@ export default function AdminDashboard() {
                   onChange={(e) => setSettings({ ...settings, maxStageSelections: e.target.value })}
                   className="focus-ring w-full rounded-xl border-2 border-sandline bg-sand px-3 py-2 text-[14px] outline-none"
                 />
+              </div>
+              <div>
+                <label className="mb-1 block text-[13px] font-semibold text-ink">
+                  രജിസ്ട്രേഷൻ അവസാനിക്കുന്ന സമയം (Deadline)
+                </label>
+                <input
+                  type="datetime-local"
+                  value={settings.registrationDeadline ? new Date(new Date(settings.registrationDeadline).getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().slice(0, 16) : ""}
+                  onChange={(e) => setSettings({ ...settings, registrationDeadline: e.target.value ? new Date(e.target.value).toISOString() : null })}
+                  className="focus-ring w-full rounded-xl border-2 border-sandline bg-sand px-3 py-2 text-[14px] outline-none"
+                />
+                <p className="mt-1 text-[11px] text-ink/40">അവസാന സമയം വേണ്ടെങ്കിൽ ശൂന്യമായി ഇടുക (Leave empty for no deadline)</p>
               </div>
               <div className="mt-2 flex justify-end gap-3">
                 <button

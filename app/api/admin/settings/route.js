@@ -26,6 +26,7 @@ export async function PUT(req) {
     const body = await req.json();
     const maxOffStageSelections = parseInt(body.maxOffStageSelections, 10);
     const maxStageSelections = parseInt(body.maxStageSelections, 10);
+    const registrationDeadline = body.registrationDeadline ? new Date(body.registrationDeadline) : null;
 
     if (
       isNaN(maxOffStageSelections) ||
@@ -42,10 +43,11 @@ export async function PUT(req) {
     await dbConnect();
     let settings = await Settings.findOne({});
     if (!settings) {
-      settings = await Settings.create({ maxOffStageSelections, maxStageSelections });
+      settings = await Settings.create({ maxOffStageSelections, maxStageSelections, registrationDeadline });
     } else {
       settings.maxOffStageSelections = maxOffStageSelections;
       settings.maxStageSelections = maxStageSelections;
+      settings.registrationDeadline = registrationDeadline;
       await settings.save();
     }
 

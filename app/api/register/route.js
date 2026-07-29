@@ -25,6 +25,13 @@ export async function POST(req) {
     const maxOffStageSelections = settings?.maxOffStageSelections ?? 2;
     const maxStageSelections = settings?.maxStageSelections ?? 1;
 
+    if (settings?.registrationDeadline && new Date() > new Date(settings.registrationDeadline)) {
+      return NextResponse.json(
+        { ok: false, errors: { general: "രജിസ്ട്രേഷൻ സമയം അവസാനിച്ചു (Registration Closed)" } },
+        { status: 403 }
+      );
+    }
+
     const errors = {};
 
     if (!studentName || studentName.trim().length < 2) {

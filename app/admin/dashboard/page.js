@@ -29,6 +29,8 @@ export default function AdminDashboard() {
       const params = new URLSearchParams();
       if (q) params.set("q", q);
       if (categoryId) params.set("categoryId", categoryId);
+      params.set("page", currentPage);
+      params.set("limit", itemsPerPage);
       const res = await fetch(`/api/admin/registrations?${params.toString()}`);
       if (res.status === 401) {
         router.push("/admin");
@@ -56,10 +58,13 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     setCurrentPage(1);
+  }, [q, categoryId]);
+
+  useEffect(() => {
     const t = setTimeout(load, 350);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [q, categoryId]);
+  }, [currentPage, itemsPerPage, q, categoryId]);
 
   async function handleLogout() {
     await fetch("/api/admin/logout", { method: "POST" });
@@ -122,13 +127,7 @@ export default function AdminDashboard() {
     return out;
   }, [data]);
 
-  const paginatedData = useMemo(() => {
-    if (!data?.registrations) return [];
-    const start = (currentPage - 1) * itemsPerPage;
-    return data.registrations.slice(start, start + itemsPerPage);
-  }, [data?.registrations, currentPage, itemsPerPage]);
-
-  const totalPages = data?.registrations ? Math.ceil(data.registrations.length / itemsPerPage) : 0;
+  const totalPages = data?.total ? Math.ceil(data.total / itemsPerPage) : 0;
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-5xl px-4 py-6 sm:px-6">
@@ -150,6 +149,17 @@ export default function AdminDashboard() {
           >
             ⬇ CSV എക്സ്പോർട്ട്
           </a>
+          <button
+            onClick={() => {
+              const params = new URLSearchParams();
+              if (q) params.set("q", q);
+              if (categoryId) params.set("categoryId", categoryId);
+              window.open(`/admin/print?${params.toString()}`, "_blank");
+            }}
+            className="focus-ring rounded-xl bg-white px-4 py-2.5 text-[14px] font-bold text-night border-2 border-sandline shadow-soft"
+          >
+            🖨️ പ്രിന്റ് / PDF
+          </button>
           <button
             onClick={() => setShowSettings(true)}
             className="focus-ring rounded-xl border-2 border-sandline bg-white px-4 py-2.5 text-[14px] font-bold text-ink"
@@ -361,7 +371,7 @@ export default function AdminDashboard() {
               </tr>
             )}
             {!loading &&
-              paginatedData.map((r) => (
+              data?.registrations?.map((r) => (
                 <tr key={r._id} className="border-b border-sandline last:border-0 hover:bg-sand/40">
                   <td className="px-4 py-3 font-semibold text-night">{r.regNo}</td>
                   <td className="px-4 py-3">{r.studentName}</td>

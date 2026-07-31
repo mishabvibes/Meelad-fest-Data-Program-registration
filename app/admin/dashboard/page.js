@@ -5,6 +5,17 @@ import { useRouter } from "next/navigation";
 import { CATEGORIES, ALL_CLASSES } from "@/data/categories";
 import RegistrationWizard from "@/components/RegistrationWizard";
 
+function getBadgeClass(categoryId) {
+  const map = {
+    kids: "bg-blue-100 text-blue-800 border border-blue-200",
+    sub_junior: "bg-emerald-100 text-emerald-800 border border-emerald-200",
+    junior: "bg-amber-100 text-amber-800 border border-amber-200",
+    senior: "bg-purple-100 text-purple-800 border border-purple-200",
+    super_senior: "bg-rose-100 text-rose-800 border border-rose-200",
+  };
+  return map[categoryId] || "bg-gray-100 text-gray-800 border border-gray-200";
+}
+
 export default function AdminDashboard() {
   const router = useRouter();
   const [data, setData] = useState(null);
@@ -50,7 +61,7 @@ export default function AdminDashboard() {
         setSettings(jsonSettings);
       }
     } catch (err) {
-      setError("ഡാറ്റ ലോഡ് ചെയ്യുന്നതിൽ പിഴവ്");
+      setError("ഡാറ്റ ലോഡ് ചെയ്യുന്നതിൽ പിഴവ് (Error loading data)");
     } finally {
       setLoading(false);
     }
@@ -135,59 +146,242 @@ export default function AdminDashboard() {
   const totalPages = data?.total ? Math.ceil(data.total / itemsPerPage) : 0;
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-5xl px-4 py-6 sm:px-6">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-mal text-xl font-bold text-night">അഡ്മിൻ ഡാഷ്ബോർഡ്</h1>
-          <p className="font-mal text-[13px] text-ink/50">മീലാദ് ഫെസ്റ്റ് രജിസ്ട്രേഷനുകൾ</p>
+    <div className="min-h-screen bg-[#F6EFDD] font-body text-ink">
+      {/* Top Navbar */}
+      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-sandline bg-white/95 px-4 py-3 backdrop-blur-md sm:px-6 md:py-4 shadow-sm">
+        <div className="flex items-center gap-3">
+          <img src="/images/logo.png" alt="Logo" className="h-10 w-auto object-contain drop-shadow-md md:h-12" />
+          <div className="hidden sm:block">
+            <h1 className="font-display text-lg font-bold leading-tight text-night">മീലാദ് ഫെസ്റ്റ്</h1>
+            <p className="font-mal text-[11px] font-semibold text-ink/60 uppercase tracking-wider">Admin Dashboard</p>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <button
-            onClick={handleAdd}
-            className="focus-ring rounded-xl bg-night px-4 py-2.5 text-[14px] font-bold text-sand shadow-soft"
-          >
+        <div className="flex items-center gap-3">
+           <button onClick={handleLogout} className="flex items-center gap-2 rounded-full border border-sandline bg-sand px-3 py-1.5 text-[13px] font-semibold text-night transition-colors hover:bg-night hover:text-white shadow-sm">
+             <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gold text-night font-bold">A</span>
+             <span className="hidden sm:block">Log Out</span>
+           </button>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
+        
+        {/* Actions: Horizontally scrollable on mobile */}
+        <div className="no-scrollbar -mx-4 mb-6 flex gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0">
+          <button onClick={handleAdd} className="flex min-h-[44px] shrink-0 items-center gap-2 rounded-xl bg-night px-5 text-[14px] font-bold text-sand shadow-soft hover:opacity-90 transition-opacity">
             + പുതിയ രജിസ്ട്രേഷൻ
           </button>
-          <a
-            href="/api/admin/export"
-            className="focus-ring rounded-xl bg-gold px-4 py-2.5 text-[14px] font-bold text-night shadow-soft"
-          >
+          <a href="/api/admin/export" className="flex min-h-[44px] shrink-0 items-center gap-2 rounded-xl bg-gold px-5 text-[14px] font-bold text-night shadow-soft hover:opacity-90 transition-opacity">
             ⬇ CSV എക്സ്പോർട്ട്
           </a>
-          <button
-            onClick={() => setShowPrintModal(true)}
-            className="focus-ring rounded-xl bg-white px-4 py-2.5 text-[14px] font-bold text-night border-2 border-sandline shadow-soft"
-          >
+          <button onClick={() => setShowPrintModal(true)} className="flex min-h-[44px] shrink-0 items-center gap-2 rounded-xl border-2 border-sandline bg-white px-5 text-[14px] font-bold text-night shadow-sm hover:bg-sand transition-colors">
             🖨️ പ്രിന്റ് / PDF
           </button>
-          <button
-            onClick={() => setShowSettings(true)}
-            className="focus-ring rounded-xl border-2 border-sandline bg-white px-4 py-2.5 text-[14px] font-bold text-ink"
-          >
+          <button onClick={() => setShowSettings(true)} className="flex min-h-[44px] shrink-0 items-center gap-2 rounded-xl border-2 border-sandline bg-white px-5 text-[14px] font-bold text-ink shadow-sm hover:bg-sand transition-colors">
             ⚙️ സെറ്റിങ്സ്
           </button>
-          <button
-            onClick={handleLogout}
-            className="focus-ring rounded-xl border-2 border-sandline bg-white px-4 py-2.5 text-[14px] font-bold text-ink"
-          >
-            ലോഗ് ഔട്ട്
-          </button>
         </div>
-      </div>
 
+        {/* Stat Cards Grid */}
+        <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-6 md:gap-4">
+          <div className="col-span-2 rounded-[16px] bg-night p-5 shadow-soft md:col-span-1 transition-transform hover:-translate-y-0.5">
+            <p className="text-[12px] font-semibold text-sand/70 uppercase tracking-widest">ആകെ (Total)</p>
+            <p className="mt-1 font-display text-4xl font-bold text-sand">{data?.total ?? "…"}</p>
+          </div>
+          {CATEGORIES.map(cat => (
+             <div key={cat.id} className="rounded-[16px] border border-sandline bg-white p-5 shadow-sm transition-all hover:shadow-soft hover:-translate-y-0.5 md:col-span-1">
+               <p className="text-[11px] font-bold text-ink/50 uppercase tracking-widest">{cat.label}</p>
+               <p className="mt-1 font-display text-3xl font-bold text-night">{totalsByCategory[cat.id] ?? 0}</p>
+             </div>
+          ))}
+        </div>
+
+        {/* Search & Filters */}
+        <div className="mb-6 flex flex-col gap-4 rounded-2xl border border-sandline bg-white p-5 shadow-sm md:flex-row md:items-center">
+           <div className="flex-1">
+             <label className="mb-1.5 block text-[12px] font-bold uppercase tracking-widest text-ink/50">തിരയുക (Search)</label>
+             <input value={q} onChange={e=>setQ(e.target.value)} placeholder="പേര്, ഫോൺ അല്ലെങ്കിൽ Reg No..." className="focus-ring w-full rounded-xl border-2 border-sandline bg-sand px-4 py-3 text-[14px] outline-none transition-colors focus:border-gold focus:bg-white" />
+           </div>
+           <div className="flex-1 md:max-w-[280px]">
+             <label className="mb-1.5 block text-[12px] font-bold uppercase tracking-widest text-ink/50">വിഭാഗം (Category)</label>
+             <select value={categoryId} onChange={e=>setCategoryId(e.target.value)} className="focus-ring w-full rounded-xl border-2 border-sandline bg-sand px-4 py-3 text-[14px] outline-none transition-colors focus:border-gold focus:bg-white">
+               <option value="">എല്ലാ വിഭാഗവും</option>
+               {CATEGORIES.map(cat => <option key={cat.id} value={cat.id}>{cat.label} ({cat.classRangeLabel})</option>)}
+             </select>
+           </div>
+        </div>
+
+        {error && <p className="mb-4 rounded-xl bg-rose/10 p-3 text-[14px] font-medium text-rose border border-rose/20">{error}</p>}
+
+        {/* Auto-Tally Details */}
+        {data?.eventCounts && (
+          <details className="group mb-6 rounded-2xl border border-sandline bg-white shadow-sm overflow-hidden">
+            <summary className="cursor-pointer bg-sand/30 p-5 text-[14px] font-bold text-night hover:bg-sand/60 transition-colors select-none">
+              ഇനം തിരിച്ചുള്ള കണക്ക് (Auto Tally Details) 
+              <span className="ml-2 text-ink/40 text-[12px] font-normal group-open:hidden">(Click to expand)</span>
+            </summary>
+            <div className="border-t border-sandline p-5 grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+              {CATEGORIES.map((cat) => (
+                <div key={cat.id} className="rounded-xl border border-sandline bg-sand/20 p-4 shadow-sm">
+                  <p className="mb-3 border-b border-sandline/50 pb-2 text-[13px] font-bold text-night">{cat.label}</p>
+                  <ul className="space-y-1.5 text-[12px] text-ink/70">
+                    {cat.stage.map((ev) => (
+                      <li key={ev.key} className="flex justify-between items-center">
+                        <span className="truncate pr-2">{ev.name}</span>
+                        <span className="rounded bg-white px-1.5 py-0.5 font-semibold text-night shadow-sm border border-sandline">
+                          {data.eventCounts[cat.id]?.stage?.[ev.key] ?? 0}
+                        </span>
+                      </li>
+                    ))}
+                    {cat.off.map((ev) => (
+                      <li key={ev.key} className="flex justify-between items-center">
+                        <span className="truncate pr-2">{ev.name}</span>
+                        <span className="rounded bg-white px-1.5 py-0.5 font-semibold text-night shadow-sm border border-sandline">
+                          {data.eventCounts[cat.id]?.off?.[ev.key] ?? 0}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </details>
+        )}
+
+        {/* Data View */}
+        {loading && <div className="py-12 text-center font-bold text-ink/40 animate-pulse">ലോഡ് ചെയ്യുന്നു…</div>}
+        {!loading && data?.registrations?.length === 0 && <div className="py-12 text-center font-bold text-ink/40">രജിസ്ട്രേഷനുകൾ ഒന്നും കണ്ടെത്തിയില്ല</div>}
+        
+        {/* MOBILE LIST VIEW (Cards) */}
+        {!loading && data?.registrations?.length > 0 && (
+          <div className="block md:hidden space-y-4">
+            {data.registrations.map(r => (
+               <div key={r._id} className="flex flex-col gap-3 rounded-2xl border border-sandline bg-white p-4 shadow-sm">
+                 <div className="flex items-start justify-between border-b border-sandline/50 pb-3">
+                   <div>
+                     <div className="flex flex-wrap items-center gap-2 mb-1">
+                       <h3 className="font-bold text-[16px] text-night">{r.studentName}</h3>
+                       <span className={getBadgeClass(r.categoryId) + " px-2 py-0.5 rounded-full text-[10px] font-bold uppercase"}>{r.categoryLabel}</span>
+                     </div>
+                     <p className="font-display text-[12px] font-bold text-ink/50">Reg: <span className="text-gold">{r.regNo}</span> <span className="mx-1">•</span> ക്ലാസ്: {r.studentClass}</p>
+                   </div>
+                 </div>
+                 <div className="grid grid-cols-2 gap-x-2 gap-y-3 text-[12px]">
+                   <div><span className="font-semibold text-ink/40 block mb-0.5 uppercase tracking-widest text-[10px]">ഫോൺ</span>{r.guardianPhone}</div>
+                   <div><span className="font-semibold text-ink/40 block mb-0.5 uppercase tracking-widest text-[10px]">സ്റ്റേജ്</span>{(r.stageEventNames || []).join(", ") || "-"}</div>
+                   <div className="col-span-2"><span className="font-semibold text-ink/40 block mb-0.5 uppercase tracking-widest text-[10px]">ഓഫ് സ്റ്റേജ്</span>{(r.offEventNames || []).join(", ") || "-"}</div>
+                 </div>
+                 <div className="mt-1 flex gap-2 border-t border-sandline/50 pt-3">
+                   <button onClick={() => handleEdit(r)} className="flex-1 rounded-xl bg-sand py-2 text-[13px] font-bold text-night hover:bg-gold/20 transition-colors">✏️ എഡിറ്റ്</button>
+                   <button onClick={() => handleDelete(r._id)} className="flex-1 rounded-xl bg-rose/10 py-2 text-[13px] font-bold text-rose hover:bg-rose/20 transition-colors">🗑️ ഡിലീറ്റ്</button>
+                 </div>
+               </div>
+            ))}
+          </div>
+        )}
+
+        {/* DESKTOP TABLE VIEW */}
+        {!loading && data?.registrations?.length > 0 && (
+          <div className="hidden md:block overflow-hidden rounded-2xl border border-sandline bg-white shadow-soft">
+             <table className="w-full text-left text-[14px]">
+               <thead className="border-b border-sandline bg-sand/60">
+                 <tr>
+                   <th className="px-5 py-4 font-bold text-ink/60 text-[12px] uppercase tracking-wider">Reg No & Name</th>
+                   <th className="px-5 py-4 font-bold text-ink/60 text-[12px] uppercase tracking-wider">Category & Class</th>
+                   <th className="px-5 py-4 font-bold text-ink/60 text-[12px] uppercase tracking-wider">Phone</th>
+                   <th className="px-5 py-4 font-bold text-ink/60 text-[12px] uppercase tracking-wider">Events</th>
+                   <th className="px-5 py-4 text-right font-bold text-ink/60 text-[12px] uppercase tracking-wider">Actions</th>
+                 </tr>
+               </thead>
+               <tbody className="divide-y divide-sandline">
+                  {data.registrations.map((r, i) => (
+                    <tr key={r._id} className={i % 2 === 0 ? "bg-white hover:bg-sand/40 transition-colors" : "bg-sand/20 hover:bg-sand/40 transition-colors"}>
+                      <td className="px-5 py-4">
+                        <div className="font-display font-bold text-[12px] text-goldlight mb-0.5 uppercase tracking-widest">{r.regNo}</div>
+                        <div className="font-bold text-[15px] text-night">{r.studentName}</div>
+                      </td>
+                      <td className="px-5 py-4">
+                        <span className={getBadgeClass(r.categoryId) + " px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide inline-block mb-1.5"}>
+                          {r.categoryLabel}
+                        </span>
+                        <div className="text-[13px] font-medium text-ink/70">ക്ലാസ്: {r.studentClass}</div>
+                      </td>
+                      <td className="px-5 py-4 font-medium text-ink/80">{r.guardianPhone}</td>
+                      <td className="px-5 py-4 text-[13px]">
+                        <div className="mb-1.5"><span className="font-semibold text-ink/40 text-[11px] uppercase tracking-widest mr-1">സ്റ്റേജ്:</span> {(r.stageEventNames || []).join(", ") || "-"}</div>
+                        <div><span className="font-semibold text-ink/40 text-[11px] uppercase tracking-widest mr-1">ഓഫ് സ്റ്റേജ്:</span> {(r.offEventNames || []).join(", ") || "-"}</div>
+                      </td>
+                      <td className="px-5 py-4 text-right">
+                          <div className="flex justify-end gap-2">
+                            <button onClick={() => handleEdit(r)} className="rounded-xl p-2.5 text-ink/40 hover:bg-gold/20 hover:text-night transition-colors" title="Edit">✏️</button>
+                            <button onClick={() => handleDelete(r._id)} className="rounded-xl p-2.5 text-ink/40 hover:bg-rose/10 hover:text-rose transition-colors" title="Delete">🗑️</button>
+                          </div>
+                      </td>
+                    </tr>
+                  ))}
+               </tbody>
+             </table>
+          </div>
+        )}
+
+        {/* Pagination Controls */}
+        {!loading && data?.registrations?.length > 0 && (
+          <div className="mt-6 flex flex-col items-center justify-between gap-4 rounded-2xl border border-sandline bg-white p-4 shadow-sm sm:flex-row sm:px-6 sm:py-4">
+            <div className="flex items-center gap-3">
+              <span className="text-[13px] font-bold text-ink/50 uppercase tracking-widest">Rows per page:</span>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => {
+                  setItemsPerPage(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                className="focus-ring rounded-xl border border-sandline bg-sand px-3 py-1.5 text-[13px] font-semibold outline-none transition-colors focus:border-gold"
+              >
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-4">
+              <span className="text-[13px] font-bold text-ink/50 tracking-widest uppercase">
+                Page <span className="text-night">{currentPage}</span> of <span className="text-night">{totalPages}</span>
+              </span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="focus-ring rounded-xl border border-sandline bg-white px-4 py-2 text-[13px] font-bold text-night shadow-sm hover:bg-sand disabled:opacity-40 transition-all"
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="focus-ring rounded-xl border border-sandline bg-white px-4 py-2 text-[13px] font-bold text-night shadow-sm hover:bg-sand disabled:opacity-40 transition-all"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
+
+      {/* MODALS */}
       {showPrintModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-night/80 p-4">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-soft">
-            <h2 className="mb-4 font-mal text-lg font-bold text-night">പ്രിന്റ് ഓപ്ഷനുകൾ (Print Options)</h2>
-            <div className="flex flex-col gap-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-night/80 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-[24px] bg-white p-6 shadow-xl">
+            <h2 className="mb-5 font-mal text-xl font-bold text-night">പ്രിന്റ് ഓപ്ഷനുകൾ</h2>
+            <div className="flex flex-col gap-5">
               <div>
-                <label className="mb-1 block text-[13px] font-semibold text-ink">
+                <label className="mb-2 block text-[12px] font-bold uppercase tracking-widest text-ink/60">
                   എന്ത് പ്രിന്റ് ചെയ്യണം?
                 </label>
                 <select
                   value={printType}
                   onChange={(e) => setPrintType(e.target.value)}
-                  className="focus-ring w-full rounded-xl border-2 border-sandline bg-sand px-3 py-2 text-[14px] outline-none"
+                  className="focus-ring w-full rounded-xl border-2 border-sandline bg-sand px-4 py-3 text-[14px] outline-none transition-colors focus:border-gold"
                 >
                   <option value="all">എല്ലാ ഡാറ്റയും (All Data)</option>
                   <option value="category">വിഭാഗം തിരിച്ച് (By Category)</option>
@@ -197,13 +391,13 @@ export default function AdminDashboard() {
 
               {printType === "category" && (
                 <div className="rise-in">
-                  <label className="mb-1 block text-[13px] font-semibold text-ink">
+                  <label className="mb-2 block text-[12px] font-bold uppercase tracking-widest text-ink/60">
                     വിഭാഗം തിരഞ്ഞെടുക്കുക
                   </label>
                   <select
                     value={printCategoryId}
                     onChange={(e) => setPrintCategoryId(e.target.value)}
-                    className="focus-ring w-full rounded-xl border-2 border-sandline bg-sand px-3 py-2 text-[14px] outline-none"
+                    className="focus-ring w-full rounded-xl border-2 border-sandline bg-sand px-4 py-3 text-[14px] outline-none transition-colors focus:border-gold"
                   >
                     <option value="">-- തിരഞ്ഞെടുക്കുക --</option>
                     {CATEGORIES.map((cat) => (
@@ -215,13 +409,13 @@ export default function AdminDashboard() {
 
               {printType === "class" && (
                 <div className="rise-in">
-                  <label className="mb-1 block text-[13px] font-semibold text-ink">
+                  <label className="mb-2 block text-[12px] font-bold uppercase tracking-widest text-ink/60">
                     ക്ലാസ് തിരഞ്ഞെടുക്കുക
                   </label>
                   <select
                     value={printClass}
                     onChange={(e) => setPrintClass(e.target.value)}
-                    className="focus-ring w-full rounded-xl border-2 border-sandline bg-sand px-3 py-2 text-[14px] outline-none"
+                    className="focus-ring w-full rounded-xl border-2 border-sandline bg-sand px-4 py-3 text-[14px] outline-none transition-colors focus:border-gold"
                   >
                     <option value="">-- തിരഞ്ഞെടുക്കുക --</option>
                     {ALL_CLASSES.map((c) => (
@@ -232,11 +426,11 @@ export default function AdminDashboard() {
               )}
             </div>
 
-            <div className="mt-6 flex justify-end gap-3">
+            <div className="mt-8 flex justify-end gap-3">
               <button
                 type="button"
                 onClick={() => setShowPrintModal(false)}
-                className="rounded-xl px-4 py-2 text-[14px] font-bold text-ink/70 hover:bg-sand"
+                className="rounded-xl px-5 py-2.5 text-[14px] font-bold text-ink/70 hover:bg-sand transition-colors"
               >
                 റദ്ദാക്കുക
               </button>
@@ -250,7 +444,7 @@ export default function AdminDashboard() {
                   window.open(`/admin/print?${params.toString()}`, "_blank");
                   setShowPrintModal(false);
                 }}
-                className="rounded-xl bg-night px-5 py-2 text-[14px] font-bold text-sand shadow-soft disabled:opacity-50"
+                className="rounded-xl bg-night px-6 py-2.5 text-[14px] font-bold text-sand shadow-soft disabled:opacity-50 hover:bg-night/90 transition-all"
               >
                 ജനറേറ്റ് PDF
               </button>
@@ -260,13 +454,13 @@ export default function AdminDashboard() {
       )}
 
       {showSettings && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-night/80 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-soft">
-            <h2 className="mb-4 font-mal text-lg font-bold text-night">സെറ്റിങ്സ് (Settings)</h2>
-            <form onSubmit={saveSettings} className="flex flex-col gap-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-night/80 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-[24px] bg-white p-6 shadow-xl">
+            <h2 className="mb-5 font-mal text-xl font-bold text-night">സെറ്റിങ്സ് (Settings)</h2>
+            <form onSubmit={saveSettings} className="flex flex-col gap-5">
               <div>
-                <label className="mb-1 block text-[13px] font-semibold text-ink">
-                  ഓഫ് സ്റ്റേജ് പരമാവധി ഇനങ്ങൾ (Max Off-Stage Selections)
+                <label className="mb-2 block text-[12px] font-bold uppercase tracking-widest text-ink/60">
+                  ഓഫ് സ്റ്റേജ് പരമാവധി ഇനങ്ങൾ
                 </label>
                 <input
                   type="number"
@@ -274,12 +468,12 @@ export default function AdminDashboard() {
                   max="10"
                   value={settings.maxOffStageSelections}
                   onChange={(e) => setSettings({ ...settings, maxOffStageSelections: e.target.value })}
-                  className="focus-ring w-full rounded-xl border-2 border-sandline bg-sand px-3 py-2 text-[14px] outline-none"
+                  className="focus-ring w-full rounded-xl border-2 border-sandline bg-sand px-4 py-3 text-[14px] outline-none transition-colors focus:border-gold"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-[13px] font-semibold text-ink">
-                  സ്റ്റേജ് പരമാവധി ഇനങ്ങൾ (Max Stage Selections)
+                <label className="mb-2 block text-[12px] font-bold uppercase tracking-widest text-ink/60">
+                  സ്റ്റേജ് പരമാവധി ഇനങ്ങൾ
                 </label>
                 <input
                   type="number"
@@ -287,33 +481,33 @@ export default function AdminDashboard() {
                   max="10"
                   value={settings.maxStageSelections}
                   onChange={(e) => setSettings({ ...settings, maxStageSelections: e.target.value })}
-                  className="focus-ring w-full rounded-xl border-2 border-sandline bg-sand px-3 py-2 text-[14px] outline-none"
+                  className="focus-ring w-full rounded-xl border-2 border-sandline bg-sand px-4 py-3 text-[14px] outline-none transition-colors focus:border-gold"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-[13px] font-semibold text-ink">
-                  രജിസ്ട്രേഷൻ അവസാനിക്കുന്ന സമയം (Deadline)
+                <label className="mb-2 block text-[12px] font-bold uppercase tracking-widest text-ink/60">
+                  രജിസ്ട്രേഷൻ അവസാനിക്കുന്ന സമയം
                 </label>
                 <input
                   type="datetime-local"
                   value={settings.registrationDeadline ? new Date(new Date(settings.registrationDeadline).getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().slice(0, 16) : ""}
                   onChange={(e) => setSettings({ ...settings, registrationDeadline: e.target.value ? new Date(e.target.value).toISOString() : null })}
-                  className="focus-ring w-full rounded-xl border-2 border-sandline bg-sand px-3 py-2 text-[14px] outline-none"
+                  className="focus-ring w-full rounded-xl border-2 border-sandline bg-sand px-4 py-3 text-[14px] outline-none transition-colors focus:border-gold"
                 />
-                <p className="mt-1 text-[11px] text-ink/40">അവസാന സമയം വേണ്ടെങ്കിൽ ശൂന്യമായി ഇടുക (Leave empty for no deadline)</p>
+                <p className="mt-1.5 text-[11px] font-medium text-ink/40 uppercase tracking-widest">അവസാന സമയം വേണ്ടെങ്കിൽ ശൂന്യമായി ഇടുക</p>
               </div>
-              <div className="mt-2 flex justify-end gap-3">
+              <div className="mt-4 flex justify-end gap-3">
                 <button
                   type="button"
                   onClick={() => setShowSettings(false)}
-                  className="rounded-xl px-4 py-2 text-[14px] font-bold text-ink/70"
+                  className="rounded-xl px-5 py-2.5 text-[14px] font-bold text-ink/70 hover:bg-sand transition-colors"
                 >
                   റദ്ദാക്കുക
                 </button>
                 <button
                   type="submit"
                   disabled={savingSettings}
-                  className="rounded-xl bg-night px-5 py-2 text-[14px] font-bold text-sand"
+                  className="rounded-xl bg-night px-6 py-2.5 text-[14px] font-bold text-sand shadow-soft hover:bg-night/90 transition-all"
                 >
                   {savingSettings ? "സേവ് ചെയ്യുന്നു..." : "സേവ് ചെയ്യുക"}
                 </button>
@@ -324,18 +518,18 @@ export default function AdminDashboard() {
       )}
 
       {showRegistrationModal && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-night/80 p-4 pt-10">
-          <div className="relative w-full max-w-md rounded-[32px] bg-sand">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-night/80 p-4 pt-10 backdrop-blur-sm">
+          <div className="relative w-full max-w-md rounded-[32px] bg-sand shadow-xl">
             <div className="absolute right-4 top-4 z-10">
               <button
                 onClick={() => setShowRegistrationModal(false)}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-ink/10 font-bold text-ink hover:bg-ink/20"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-ink/10 font-bold text-ink hover:bg-ink/20 transition-colors"
               >
                 ✕
               </button>
             </div>
             <div className="px-6 pb-2 pt-6">
-              <h2 className="font-mal text-lg font-bold text-night">
+              <h2 className="font-mal text-xl font-bold text-night">
                 {editingRegistration ? "രജിസ്ട്രേഷൻ എഡിറ്റ് ചെയ്യുക" : "പുതിയ രജിസ്ട്രേഷൻ"}
               </h2>
             </div>
@@ -353,199 +547,6 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
-
-      {/* Summary cards */}
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-6">
-        <StatCard label="ആകെ" value={data?.total ?? "…"} highlight />
-        {CATEGORIES.map((cat) => (
-          <StatCard
-            key={cat.id}
-            label={cat.label}
-            value={totalsByCategory[cat.id] ?? 0}
-          />
-        ))}
-      </div>
-
-      {/* Filters */}
-      <div className="mb-5 flex flex-col gap-3 sm:flex-row">
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="പേര്, ഫോൺ അല്ലെങ്കിൽ Reg No തിരയുക"
-          className="focus-ring w-full rounded-xl border-2 border-sandline bg-white px-4 py-2.5 text-[14px] outline-none sm:max-w-xs"
-        />
-        <select
-          value={categoryId}
-          onChange={(e) => setCategoryId(e.target.value)}
-          className="focus-ring w-full rounded-xl border-2 border-sandline bg-white px-4 py-2.5 text-[14px] outline-none sm:max-w-xs"
-        >
-          <option value="">എല്ലാ വിഭാഗവും</option>
-          {CATEGORIES.map((cat) => (
-            <option key={cat.id} value={cat.id}>
-              {cat.label} ({cat.classRangeLabel})
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {error && <p className="mb-4 text-[14px] font-medium text-rose">{error}</p>}
-
-      {/* Per-event counts, auto tallied */}
-      {data?.eventCounts && (
-        <details className="mb-6 rounded-xl border border-sandline bg-white p-4 shadow-soft">
-          <summary className="cursor-pointer text-[14px] font-bold text-night">
-            ഇനം തിരിച്ചുള്ള കണക്ക് (ഓട്ടോമാറ്റിക്)
-          </summary>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            {CATEGORIES.map((cat) => (
-              <div key={cat.id} className="rounded-lg bg-sand p-3">
-                <p className="mb-2 text-[13px] font-bold text-night">{cat.label}</p>
-                <ul className="space-y-1 text-[13px] text-ink/70">
-                  {cat.stage.map((ev) => (
-                    <li key={ev.key} className="flex justify-between">
-                      <span>{ev.name}</span>
-                      <span className="font-semibold text-ink">
-                        {data.eventCounts[cat.id]?.stage?.[ev.key] ?? 0}
-                      </span>
-                    </li>
-                  ))}
-                  {cat.off.map((ev) => (
-                    <li key={ev.key} className="flex justify-between">
-                      <span>{ev.name}</span>
-                      <span className="font-semibold text-ink">
-                        {data.eventCounts[cat.id]?.off?.[ev.key] ?? 0}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </details>
-      )}
-
-      {/* Registrations table */}
-      <div className="overflow-x-auto rounded-xl border border-sandline bg-white shadow-soft">
-        <table className="w-full min-w-[720px] text-left text-[13px]">
-          <thead>
-            <tr className="border-b border-sandline bg-sand/60 text-ink/60">
-              <th className="px-4 py-3 font-semibold">Reg No</th>
-              <th className="px-4 py-3 font-semibold">പേര്</th>
-              <th className="px-4 py-3 font-semibold">ക്ലാസ്</th>
-              <th className="px-4 py-3 font-semibold">വിഭാഗം</th>
-              <th className="px-4 py-3 font-semibold">ഫോൺ</th>
-              <th className="px-4 py-3 font-semibold">സ്റ്റേജ്</th>
-              <th className="px-4 py-3 font-semibold">ഓഫ് സ്റ്റേജ്</th>
-              <th className="px-4 py-3 font-semibold">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading && (
-              <tr>
-                <td colSpan={8} className="px-4 py-6 text-center text-ink/40">
-                  ലോഡ് ചെയ്യുന്നു…
-                </td>
-              </tr>
-            )}
-            {!loading && data?.registrations?.length === 0 && (
-              <tr>
-                <td colSpan={8} className="px-4 py-6 text-center text-ink/40">
-                  രജിസ്ട്രേഷനുകൾ ഒന്നും കണ്ടെത്തിയില്ല
-                </td>
-              </tr>
-            )}
-            {!loading &&
-              data?.registrations?.map((r) => (
-                <tr key={r._id} className="border-b border-sandline last:border-0 hover:bg-sand/40">
-                  <td className="px-4 py-3 font-semibold text-night">{r.regNo}</td>
-                  <td className="px-4 py-3">{r.studentName}</td>
-                  <td className="px-4 py-3">{r.studentClass}</td>
-                  <td className="px-4 py-3">{r.categoryLabel}</td>
-                  <td className="px-4 py-3">{r.guardianPhone}</td>
-                  <td className="px-4 py-3">{(r.stageEventNames || []).join(", ") || "-"}</td>
-                  <td className="px-4 py-3">{(r.offEventNames || []).join(", ") || "-"}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleEdit(r)}
-                        className="rounded-lg bg-gold/20 px-2 py-1 text-[16px]"
-                        title="Edit"
-                      >
-                        ✏️
-                      </button>
-                      <button
-                        onClick={() => handleDelete(r._id)}
-                        className="rounded-lg bg-rose/10 px-2 py-1 text-[16px]"
-                        title="Delete"
-                      >
-                        🗑️
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination Controls */}
-      {!loading && data?.registrations?.length > 0 && (
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-sandline bg-white p-4 shadow-soft">
-          <div className="flex items-center gap-2">
-            <span className="text-[13px] font-medium text-ink/70">Rows per page:</span>
-            <select
-              value={itemsPerPage}
-              onChange={(e) => {
-                setItemsPerPage(Number(e.target.value));
-                setCurrentPage(1);
-              }}
-              className="focus-ring rounded-lg border border-sandline bg-sand px-2 py-1 text-[13px] outline-none"
-            >
-              <option value={10}>10</option>
-              <option value={20}>20</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-            </select>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-[13px] font-medium text-ink/70">
-              Page {currentPage} of {totalPages}
-            </span>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="focus-ring rounded-lg border border-sandline bg-white px-3 py-1 text-[13px] font-semibold text-ink hover:bg-sand disabled:opacity-40"
-              >
-                Previous
-              </button>
-              <button
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                className="focus-ring rounded-lg border border-sandline bg-white px-3 py-1 text-[13px] font-semibold text-ink hover:bg-sand disabled:opacity-40"
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </main>
-  );
-}
-
-function StatCard({ label, value, highlight }) {
-  return (
-    <div
-      className={[
-        "rounded-xl border px-3 py-3 text-center shadow-soft",
-        highlight ? "border-gold bg-night text-sand" : "border-sandline bg-white text-ink",
-      ].join(" ")}
-    >
-      <p className={["text-[11px] font-medium", highlight ? "text-sand/70" : "text-ink/50"].join(" ")}>
-        {label}
-      </p>
-      <p className="mt-0.5 text-xl font-bold">{value}</p>
     </div>
   );
 }

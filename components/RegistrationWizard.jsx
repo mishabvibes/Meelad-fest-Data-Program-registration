@@ -26,6 +26,7 @@ export default function RegistrationWizard({
   maxStageSelections = 1,
   registrationDeadline = null,
   adminMode = false,
+  editMode = false,
   initialData = null,
   onSuccess = null,
   onCancel = null,
@@ -36,7 +37,7 @@ export default function RegistrationWizard({
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [isExpired, setIsExpired] = useState(() => {
-    if (!registrationDeadline || adminMode) return false;
+    if (!registrationDeadline || adminMode || editMode) return false;
     return new Date() > new Date(registrationDeadline);
   });
 
@@ -125,15 +126,26 @@ export default function RegistrationWizard({
     setSubmitting(true);
     setErrors({});
     try {
-      const endpoint = (adminMode && initialData?._id)
-        ? `/api/admin/registrations/${initialData._id}`
-        : "/api/register";
-      const method = (adminMode && initialData?._id) ? "PUT" : "POST";
+      let endpoint, method;
+      if (editMode && initialData?._id) {
+        endpoint = `/api/update-registration/${initialData._id}`;
+        method = "PUT";
+      } else if (adminMode && initialData?._id) {
+        endpoint = `/api/admin/registrations/${initialData._id}`;
+        method = "PUT";
+      } else {
+        endpoint = "/api/register";
+        method = "POST";
+      }
 
       const res = await fetch(endpoint, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(
+          editMode
+            ? { ...form, verifyPhone: initialData?._verifyPhone }
+            : form
+        ),
       });
       const data = await res.json();
       if (!res.ok || !data.ok) {
@@ -146,7 +158,7 @@ export default function RegistrationWizard({
         window.scrollTo({ top: 0, behavior: "smooth" });
         return;
       }
-      if (adminMode && onSuccess) {
+      if ((adminMode || editMode) && onSuccess) {
         onSuccess(data);
         return;
       }
@@ -175,7 +187,7 @@ export default function RegistrationWizard({
   Requires the new ArchMotif.jsx (lattice + lantern version) and the
   Tailwind + font additions listed in NOTES.md.
 */}
-{!adminMode && (
+{!adminMode && !editMode && (
 <header className="arch-header relative overflow-hidden rounded-b-[32px] px-6 pb-8 pt-12 text-center shadow-soft">
   {/* soft radial glow + star field, purely decorative */}
   <div className="star-field pointer-events-none absolute inset-0" aria-hidden="true">
@@ -206,16 +218,22 @@ export default function RegistrationWizard({
 )}
 
       <main className="flex flex-col px-4 pt-6">
-        {isExpired && !adminMode ? (
+        {isExpired && !adminMode && !editMode ? (
           <div className="rounded-2xl border border-rose/30 bg-rose/10 px-4 py-8 text-center text-rose shadow-soft">
             <h2 className="mb-2 font-display text-2xl font-bold">രജിസ്ട്രേഷൻ അവസാനിച്ചു</h2>
             <p className="font-mal text-[14px] font-medium opacity-80">
               (Registration Closed)
             </p>
+            <a
+              href="/find-registration"
+              className="focus-ring mt-5 inline-block rounded-2xl bg-gold px-6 py-3.5 text-[15px] font-bold text-night shadow-soft active:scale-[0.99]"
+            >
+              🔍 എന്റെ രജിസ്ട്രേഷൻ കണ്ടെത്തുക
+            </a>
           </div>
         ) : (
           <>
-            {step === 1 && !adminMode && registrationDeadline && (
+            {step === 1 && !adminMode && !editMode && registrationDeadline && (
               <CountdownTimer deadline={registrationDeadline} onExpire={() => setIsExpired(true)} />
             )}
             <div className="mb-6">
@@ -321,7 +339,7 @@ export default function RegistrationWizard({
           </div>
 
           <div className="flex gap-3">
-            {adminMode && (
+            {(adminMode || editMode) && (
               <button
                 type="button"
                 onClick={onCancel}
